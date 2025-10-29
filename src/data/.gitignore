@@ -1,0 +1,23 @@
+# Ignore OS junk
+.DS_Store
+Thumbs.db
+
+# Ignore Python cache and virtual environments
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore datasets and data folders
+src/data/
+data/
+*.csv
+*.xlsx
+*.zip
+
+# Ignore IDE/project files
+.vscode/
+.idea/
