@@ -1,0 +1,12 @@
+FROM rocker/r-base:latest
+
+WORKDIR /app/src
+    
+COPY src/ /app/src/
+
+COPY install_packages.R /app/install_packages.R
+
+RUN Rscript /app/install_packages.R
+    
+CMD ["Rscript", "appR/main.R"]
+    

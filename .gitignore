@@ -18,6 +18,21 @@ data/
 *.xlsx
 *.zip
 
+# Ignore R-related files
+*.Rhistory
+*.RData
+*.Rproj.user
+
+# Ignore Docker build artifacts
+*.log
+*.tar
+*.out
+*.tmp
+
+
 # Ignore IDE/project files
 .vscode/
 .idea/
+
+# Ignore GitHub Codespaces or VSCode remote settings (optional)
+.devcontainer/
