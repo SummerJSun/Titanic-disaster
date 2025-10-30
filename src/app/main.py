@@ -50,7 +50,7 @@ def main():
     X_test = X_test.reindex(columns=X_train.columns, fill_value=0)
 
     # ---------- Impute missing numeric values ----------
-    print("\n[4] Imputing numeric columns with train medians ...")
+    print("\n[4] Imputing NAs in numeric columns with train medians ...")
     num_cols = X_train.select_dtypes(include="number").columns
     for c in num_cols:
         median_val = X_train[c].median()
@@ -58,7 +58,7 @@ def main():
         X_test[c] = X_test[c].fillna(median_val)
 
     # ---------- Scale numeric columns ----------
-    print("\n[5] Scaling numeric features ...")
+    print("\n[5] Scaling numeric features using z-score scaling ...")
     scaler = StandardScaler()
     X_train[num_cols] = scaler.fit_transform(X_train[num_cols])
     X_test[num_cols] = scaler.transform(X_test[num_cols])
