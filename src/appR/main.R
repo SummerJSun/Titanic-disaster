@@ -1,29 +1,24 @@
-
 main <- function() {
-  cat("=== Titanic Logistic Regression (accuracy only) ===\n")
+  cat("=== Titanic Logistic Regression ===\n")
   
   # ---------- Load ----------
   cat("\n[1] Loading datasets from ./data ...\n")
   train <- read.csv("data/train.csv", stringsAsFactors = FALSE)
   test  <- read.csv("data/test.csv",  stringsAsFactors = FALSE)
-  gender_submission <- read.csv("data/gender_submission.csv", stringsAsFactors = FALSE)
   cat(sprintf("train.shape: (%d, %d)\n", nrow(train), ncol(train)))
   cat(sprintf("test.shape:  (%d, %d)\n", nrow(test),  ncol(test)))
-  cat(sprintf("gender_submission.shape: (%d, %d)\n", nrow(gender_submission), ncol(gender_submission)))
   
-  # ---------- Define X_train, y_train, X_test, y_test ----------
+  # ---------- Define X_train, y_train, X_test ----------
   cat("\n[2] Preparing data ...\n")
   y_train <- train$Survived
   X_train <- subset(train, select = setdiff(colnames(train), c("Survived", "PassengerId")))
   pid_test <- test$PassengerId
   X_test  <- subset(test, select = setdiff(colnames(test), "PassengerId"))
-  idx <- match(pid_test, gender_submission$PassengerId)
-  y_test <- gender_submission$Survived[idx]
   
   # ---------- Encoding ----------
   cat("\n[3] Encoding categorical variables ...\n")
   
-  # Sex
+  # Sex -> {male:0, female:1}
   if ("Sex" %in% colnames(X_train)) {
     cat(" - Encoding 'Sex'\n")
     map_sex <- function(x) ifelse(x == "male", 0,
@@ -32,15 +27,14 @@ main <- function() {
     X_test$Sex  <- map_sex(X_test$Sex)
   }
   
-  # Embarked
+  # Embarked -> one-hot (drop_first = TRUE)
   if ("Embarked" %in% colnames(X_train)) {
     cat(" - One-hot encoding 'Embarked' (drop_first=True)\n")
-
     X_train$Embarked <- factor(X_train$Embarked)
     embarked_levels <- levels(X_train$Embarked)
     X_test$Embarked  <- factor(X_test$Embarked, levels = embarked_levels)
     
-    d_train <- model.matrix(~ Embarked, data = X_train)[, -1, drop = FALSE]   
+    d_train <- model.matrix(~ Embarked, data = X_train)[, -1, drop = FALSE]
     d_test  <- model.matrix(~ Embarked, data = X_test)[,  -1, drop = FALSE]
     
     X_train$Embarked <- NULL
@@ -57,7 +51,7 @@ main <- function() {
     X_test  <- X_test[,  setdiff(colnames(X_test),  to_drop),  drop = FALSE]
   }
   
-
+  # Align columns between train and test
   missing_in_test <- setdiff(colnames(X_train), colnames(X_test))
   if (length(missing_in_test) > 0) {
     for (c in missing_in_test) X_test[[c]] <- 0
@@ -91,16 +85,24 @@ main <- function() {
   model <- glm(Survived ~ ., data = train_df, family = binomial())
   cat(" - Model trained successfully.\n")
   
-  # ---------- Evaluate ----------
-  cat("\n[7] Evaluating accuracy ...\n")
+  # ---------- Training accuracy ----------
+  cat("\n[7] Evaluating training accuracy ...\n")
   train_pred <- ifelse(predict(model, newdata = X_train, type = "response") > 0.5, 1, 0)
-  test_pred  <- ifelse(predict(model, newdata = X_test,  type = "response") > 0.5, 1, 0)
-  
   train_acc <- mean(train_pred == y_train, na.rm = TRUE)
-  test_acc  <- mean(test_pred  == y_test,  na.rm = TRUE)
-  
   cat(sprintf("Training Accuracy: %.4f\n", train_acc))
-  cat(sprintf("Test Accuracy (vs gender_submission): %.4f\n", test_acc))
+  
+  # ---------- Predict & Save ----------
+  cat("\n[8] Generating predictions on test set ...\n")
+  test_prob <- predict(model, newdata = X_test, type = "response")
+  test_pred <- ifelse(test_prob > 0.5, 1L, 0L)
+  
+  out <- data.frame(
+    PassengerId = pid_test,
+    Survived = as.integer(test_pred)
+  )
+  out_path <- "data/predictions_r.csv"
+  write.csv(out, out_path, row.names = FALSE)
+  cat(sprintf("Saved predictions to %s\n", out_path))
   
   cat("\n=== Done. ===\n")
 }
