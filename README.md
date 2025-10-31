@@ -138,7 +138,6 @@ Mirrors the Python version and ends with Training Accuracy and Test Accuracy.
 #### 1) Put the Kaggle CSVs in: src/data/
 ####    - train.csv
 ####    - test.csv
-####    - gender_submission.csv
 
 #### 2) Build both images:  
 docker build -f Dockerfile   -t titanic_py .  
